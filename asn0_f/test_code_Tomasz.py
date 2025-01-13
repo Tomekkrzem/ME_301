@@ -65,8 +65,6 @@ class Spyder:
 
         print("Resting Position")
 
-
-
     def turn_30(self, R_or_L):
         
         # Reset Robot to Resting Configuration
@@ -142,13 +140,3 @@ class Spyder:
         for i in range(3):
             self.turn_30(R_or_L)
             i += 1
-        
-        
-            
-        
-        
-
-        
-deg_to_serv = lambda x : int(round(180/1000 * x))
-
-print(deg_to_serv(900))
