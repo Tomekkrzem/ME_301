@@ -1,12 +1,9 @@
 import utility
+import time
 
 # Main loop to continuously walk forward
 if __name__ == "__main__":
-    #prepare legs
     utility.reset_legs()
-
-    for i in range(10):
-        utility.walk_forward()
-        i = i + 1
-        
+    utility.turn(False, 90)
+    time.sleep(1)
     utility.turn(True, 90)
