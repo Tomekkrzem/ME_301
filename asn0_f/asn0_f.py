@@ -33,7 +33,7 @@ for i in range(5):
     if s.getDistance() < 450:
         utility.turn(False,45)
     else:
-        utility.turn(True,45)
+        utility.walk_forward()
 
 
 
