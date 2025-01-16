@@ -227,11 +227,6 @@ class Spyder:
 
         self.turn_30(R_or_L,3)
 
-
-
-
-
-
 if __name__ == "__main__":
     robot = Spyder(0.25,curr_legs)
 
