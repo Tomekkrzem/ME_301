@@ -83,125 +83,181 @@ def reset_legs():
             move_leg(i, 500, 625, 775)
     uSleep(1)
 
+#new turn
 def turn(RorL, degree):
-    #Will setup degree once turn rate is known
-    for i in range(int(degree/45)):
-        if(RorL):#Turning left
-            #Lift second set
-            move_leg(2, 600, 350, 500)
-            move_leg(4, 600, 650, 500)
-            move_leg(6, 600, 650, 500)
-            uSleep(0.5)
+    newdeg = min(45, degree)
+    differance = (90 / (45/newdeg))
+    forwards = 500 - differance
+    backwards = 500 + differance
+    if(RorL):#Turning left
+        forwards = 500 + differance
+        backwards = 500 - differance
 
-            #Stand on second
-            move_leg(2, 600, 375, 225)
-            move_leg(4, 600, 625, 775)
-            move_leg(6, 600, 625, 775)
-            uSleep(1)
+    #Lift second set
+    move_leg(2, forwards, 350, 500)
+    move_leg(4, forwards, 650, 500)
+    move_leg(6, forwards, 650, 500)
+    uSleep(0.5)
 
-            #Lift first
-            move_leg(1, 600, 350, 500)
-            move_leg(3, 600, 350, 500)
-            move_leg(5, 600, 650, 500)
-            uSleep(0.5)
-
-            #Turn on second
-            move_leg(2, 400, 375, 225)
-            move_leg(4, 400, 625, 775)
-            move_leg(6, 400, 625, 775)
-            uSleep(1)
-
-            #Stand on first
-            move_leg(1, 600, 375, 225)
-            move_leg(3, 600, 375, 225)
-            move_leg(5, 600, 625, 775)
-            uSleep(1)
-
-            #Lift second set
-            move_leg(2, 600, 350, 500)
-            move_leg(4, 600, 650, 500)
-            move_leg(6, 600, 650, 500)
-            uSleep(0.5)
-
-            #Turn on first
-            move_leg(1, 400, 375, 225)
-            move_leg(3, 400, 375, 225)
-            move_leg(5, 400, 625, 775)
-            uSleep(1)
-
-        else:#turning right
-            #Lifted legs and move first set
-            move_leg(1, 400, 350, 500)
-            move_leg(3, 400, 350, 500)
-            move_leg(5, 400, 650, 500)
-            uSleep(0.5)
-
-            move_leg(1, 400, 375, 225)
-            move_leg(3, 400, 375, 225)
-            move_leg(5, 400, 625, 775)
-            uSleep(1)
-
-            #Lift second set
-            move_leg(2, 400, 350, 500)
-            move_leg(4, 400, 650, 500)
-            move_leg(6, 400, 650, 500)
-            uSleep(0.5)
-
-            #Turn on first
-            move_leg(1, 600, 375, 225)
-            move_leg(3, 600, 375, 225)
-            move_leg(5, 600, 625, 775)
-            uSleep(1)
-
-            #Stand on second
-            move_leg(2, 400, 375, 225)
-            move_leg(4, 400, 625, 775)
-            move_leg(6, 400, 625, 775)
-            uSleep(1)
-
-            #Lift first
-            move_leg(1, 400, 350, 500)
-            move_leg(3, 400, 350, 500)
-            move_leg(5, 400, 650, 500)
-            uSleep(0.5)
-
-            #Turn on second
-            move_leg(2, 600, 375, 225)
-            move_leg(4, 600, 625, 775)
-            move_leg(6, 600, 625, 775)
-            uSleep(1)
-
-    #reset on legs
-    if(RorL):
-        move_leg(2, 500, 375, 225)
-        move_leg(4, 500, 625, 775)
-        move_leg(6, 500, 625, 775)
-        uSleep(1)
-
-        move_leg(1, 500, 350, 500)
-        move_leg(3, 500, 350, 500)
-        move_leg(5, 500, 650, 500)
-        uSleep(0.5)
-
-        move_leg(1, 500, 325, 225)
-        move_leg(3, 500, 325, 225)
-        move_leg(5, 500, 625, 775)
-
-    else:
-        move_leg(1, 500, 375, 225)
-        move_leg(3, 500, 375, 225)
-        move_leg(5, 500, 625, 775)
-        uSleep(1)
-
-        move_leg(2, 500, 350, 500)
-        move_leg(4, 500, 650, 500)
-        move_leg(6, 500, 650, 500)
-        uSleep(0.5)
-
-        move_leg(2, 500, 325, 225)
-        move_leg(4, 500, 625, 775)
-        move_leg(6, 500, 625, 775)
+    #Stand on second
+    move_leg(2, forwards, 375, 225)
+    move_leg(4, forwards, 625, 775)
+    move_leg(6, forwards, 625, 775)
     uSleep(1)
+
+    #Lift first
+    move_leg(1, forwards, 350, 500)
+    move_leg(3, forwards, 350, 500)
+    move_leg(5, forwards, 650, 500)
+    uSleep(0.5)
+
+    #Turn on second
+    move_leg(2, backwards, 375, 225)
+    move_leg(4, backwards, 625, 775)
+    move_leg(6, backwards, 625, 775)
+    uSleep(1)
+
+    #Stand on first
+    move_leg(1, forwards, 375, 225)
+    move_leg(3, forwards, 375, 225)
+    move_leg(5, forwards, 625, 775)
+    uSleep(1)
+
+    #Lift second set
+    move_leg(2, forwards, 350, 500)
+    move_leg(4, forwards, 650, 500)
+    move_leg(6, forwards, 650, 500)
+    uSleep(0.5)
+
+    #Turn on first
+    move_leg(1, backwards, 375, 225)
+    move_leg(3, backwards, 375, 225)
+    move_leg(5, backwards, 625, 775)
+    uSleep(1)
+
+    if (degree >= 45):
+        turn(RorL, degree - 45)
+
+# Old Turn
+# def turn(RorL, degree):
+#     #Will setup degree once turn rate is known
+#     for i in range(int(degree/45)):
+#         if(RorL):#Turning left
+#             #Lift second set
+#             move_leg(2, 600, 350, 500)
+#             move_leg(4, 600, 650, 500)
+#             move_leg(6, 600, 650, 500)
+#             uSleep(0.5)
+
+#             #Stand on second
+#             move_leg(2, 600, 375, 225)
+#             move_leg(4, 600, 625, 775)
+#             move_leg(6, 600, 625, 775)
+#             uSleep(1)
+
+#             #Lift first
+#             move_leg(1, 600, 350, 500)
+#             move_leg(3, 600, 350, 500)
+#             move_leg(5, 600, 650, 500)
+#             uSleep(0.5)
+
+#             #Turn on second
+#             move_leg(2, 400, 375, 225)
+#             move_leg(4, 400, 625, 775)
+#             move_leg(6, 400, 625, 775)
+#             uSleep(1)
+
+#             #Stand on first
+#             move_leg(1, 600, 375, 225)
+#             move_leg(3, 600, 375, 225)
+#             move_leg(5, 600, 625, 775)
+#             uSleep(1)
+
+#             #Lift second set
+#             move_leg(2, 600, 350, 500)
+#             move_leg(4, 600, 650, 500)
+#             move_leg(6, 600, 650, 500)
+#             uSleep(0.5)
+
+#             #Turn on first
+#             move_leg(1, 400, 375, 225)
+#             move_leg(3, 400, 375, 225)
+#             move_leg(5, 400, 625, 775)
+#             uSleep(1)
+
+#         else:#turning right
+#             #Lifted legs and move first set
+#             move_leg(1, 400, 350, 500)
+#             move_leg(3, 400, 350, 500)
+#             move_leg(5, 400, 650, 500)
+#             uSleep(0.5)
+
+#             move_leg(1, 400, 375, 225)
+#             move_leg(3, 400, 375, 225)
+#             move_leg(5, 400, 625, 775)
+#             uSleep(1)
+
+#             #Lift second set
+#             move_leg(2, 400, 350, 500)
+#             move_leg(4, 400, 650, 500)
+#             move_leg(6, 400, 650, 500)
+#             uSleep(0.5)
+
+#             #Turn on first
+#             move_leg(1, 600, 375, 225)
+#             move_leg(3, 600, 375, 225)
+#             move_leg(5, 600, 625, 775)
+#             uSleep(1)
+
+#             #Stand on second
+#             move_leg(2, 400, 375, 225)
+#             move_leg(4, 400, 625, 775)
+#             move_leg(6, 400, 625, 775)
+#             uSleep(1)
+
+#             #Lift first
+#             move_leg(1, 400, 350, 500)
+#             move_leg(3, 400, 350, 500)
+#             move_leg(5, 400, 650, 500)
+#             uSleep(0.5)
+
+#             #Turn on second
+#             move_leg(2, 600, 375, 225)
+#             move_leg(4, 600, 625, 775)
+#             move_leg(6, 600, 625, 775)
+#             uSleep(1)
+
+#     #reset on legs
+#     if(RorL):
+#         move_leg(2, 500, 375, 225)
+#         move_leg(4, 500, 625, 775)
+#         move_leg(6, 500, 625, 775)
+#         uSleep(1)
+
+#         move_leg(1, 500, 350, 500)
+#         move_leg(3, 500, 350, 500)
+#         move_leg(5, 500, 650, 500)
+#         uSleep(0.5)
+
+#         move_leg(1, 500, 325, 225)
+#         move_leg(3, 500, 325, 225)
+#         move_leg(5, 500, 625, 775)
+
+#     else:
+#         move_leg(1, 500, 375, 225)
+#         move_leg(3, 500, 375, 225)
+#         move_leg(5, 500, 625, 775)
+#         uSleep(1)
+
+#         move_leg(2, 500, 350, 500)
+#         move_leg(4, 500, 650, 500)
+#         move_leg(6, 500, 650, 500)
+#         uSleep(0.5)
+
+#         move_leg(2, 500, 325, 225)
+#         move_leg(4, 500, 625, 775)
+#         move_leg(6, 500, 625, 775)
+#     uSleep(1)
 
 def scan(sonars):
     dists = []
