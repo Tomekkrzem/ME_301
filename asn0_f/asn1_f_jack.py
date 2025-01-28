@@ -4,36 +4,12 @@ from sonar import Sonar
 
 sonar = Sonar()
 
-# Wave function
-# if __name__ == "__main__":
-#     utility.reset_legs()
-#     count = 0
-#     for i in range (3):
-#         dist = sonar.getDistance()
-#         print(dist)
-#         if dist <= 400:
-#             count += 1
-#         time.sleep(1)
-#         print(f"Count: {count}")
-
-#     if count == 1:
-#         utility.turn(False,90)
-#     if count == 2:
-#         utility.turn(True,90)
-#     if count == 3:
-#         utility.turn(False,180)
-#     print("Done.")
-#     time.sleep(1)
-
-# for i in range(4):
-#     dist = sonar.getDistance()
-#     print(dist)
-#     if (dist <= 350):
-#         utility.walk_forward()
-#     else:
-#         utility.turn(False, 45)
-
-while True:
+for i in range(5): #Made for only one sensor, currently on left side
     dist = sonar.getDistance()
     print(dist)
-    time.sleep(0.1)
+    if (dist <= 330):
+        utility.turn(False, 10)
+    elif (dist >= 370):
+        utility.turn(True, 10)
+    else:
+        utility.walk_forward()
