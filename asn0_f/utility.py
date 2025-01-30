@@ -9,7 +9,7 @@ from sonar import Sonar
 board = rrc.Board()
 sonar = Sonar()
 start = True
-speed = 0.375
+speed = 0.1
 
 # Assumed leg-motor relations
 legs = {
@@ -32,9 +32,9 @@ def move_leg(leg_id, horizontal_pos, first_segment_pos, second_segment_pos):
 # Walking sequence
 def walk_forward():
     #Lifted legs and move first set
-    move_leg(1, 300, 350, 500)
-    move_leg(3, 550, 350, 500)
-    move_leg(5, 600, 650, 500)
+    move_leg(1, 300, 350, 375)
+    move_leg(3, 550, 350, 375)
+    move_leg(5, 600, 650, 625)
     uSleep(0.5)
 
     move_leg(1, 300, 375, 225)
@@ -43,9 +43,9 @@ def walk_forward():
     uSleep(1)
 
     #Lift second set
-    move_leg(2, 400, 350, 500)
-    move_leg(4, 700, 650, 500)
-    move_leg(6, 600, 650, 500)
+    move_leg(2, 400, 350, 375)
+    move_leg(4, 700, 650, 625)
+    move_leg(6, 600, 650, 625)
     uSleep(0.5)
 
     #Move on first
@@ -62,9 +62,9 @@ def walk_forward():
 
 
     #Lift first
-    move_leg(1, 300, 350, 500)
-    move_leg(3, 550, 350, 500)
-    move_leg(5, 600, 650, 500)
+    move_leg(1, 300, 350, 375)
+    move_leg(3, 550, 350, 375)
+    move_leg(5, 600, 650, 625)
     uSleep(0.5)
 
     #Turn on second
@@ -86,7 +86,7 @@ def reset_legs():
 #new turn
 def turn(RorL, degree):
     newdeg = min(45, degree)
-    differance = (90 / (45/newdeg))
+    differance = int(90 / (45/newdeg))
     forwards = 500 - differance
     backwards = 500 + differance
     if(RorL):#Turning left
@@ -94,9 +94,9 @@ def turn(RorL, degree):
         backwards = 500 - differance
 
     #Lift second set
-    move_leg(2, forwards, 350, 500)
-    move_leg(4, forwards, 650, 500)
-    move_leg(6, forwards, 650, 500)
+    move_leg(2, forwards, 350, 375)
+    move_leg(4, forwards, 650, 625)
+    move_leg(6, forwards, 650, 625)
     uSleep(0.5)
 
     #Stand on second
@@ -106,9 +106,9 @@ def turn(RorL, degree):
     uSleep(1)
 
     #Lift first
-    move_leg(1, forwards, 350, 500)
-    move_leg(3, forwards, 350, 500)
-    move_leg(5, forwards, 650, 500)
+    move_leg(1, forwards, 350, 375)
+    move_leg(3, forwards, 350, 375)
+    move_leg(5, forwards, 650, 625)
     uSleep(0.5)
 
     #Turn on second
@@ -124,9 +124,9 @@ def turn(RorL, degree):
     uSleep(1)
 
     #Lift second set
-    move_leg(2, forwards, 350, 500)
-    move_leg(4, forwards, 650, 500)
-    move_leg(6, forwards, 650, 500)
+    move_leg(2, forwards, 350, 375)
+    move_leg(4, forwards, 650, 625)
+    move_leg(6, forwards, 650, 625)
     uSleep(0.5)
 
     #Turn on first
@@ -137,6 +137,38 @@ def turn(RorL, degree):
 
     if (degree >= 45):
         turn(RorL, degree - 45)
+
+    else:
+        if(RorL):
+            move_leg(2, 500, 375, 225)
+            move_leg(4, 500, 625, 775)
+            move_leg(6, 500, 625, 775)
+            uSleep(1)
+
+            move_leg(1, 500, 350, 375)
+            move_leg(3, 500, 350, 375)
+            move_leg(5, 500, 650, 625)
+            uSleep(0.5)
+
+            move_leg(1, 500, 325, 225)
+            move_leg(3, 500, 325, 225)
+            move_leg(5, 500, 625, 775)
+
+        else:
+            move_leg(1, 500, 375, 225)
+            move_leg(3, 500, 375, 225)
+            move_leg(5, 500, 625, 775)
+            uSleep(1)
+
+            move_leg(2, 500, 350, 375)
+            move_leg(4, 500, 650, 625)
+            move_leg(6, 500, 650, 625)
+            uSleep(0.5)
+
+            move_leg(2, 500, 325, 225)
+            move_leg(4, 500, 625, 775)
+            move_leg(6, 500, 625, 775)
+        uSleep(1)
 
 # Old Turn
 # def turn(RorL, degree):
