@@ -1,4 +1,4 @@
-import math
+import numpy as np
 
 def leg_IK(desired_pos):
 
@@ -10,73 +10,61 @@ def leg_IK(desired_pos):
 
     x, y, z = map(float,desired_pos)
 
-    l = math.sqrt(x**2 + y**2)
+    l = np.sqrt(x**2 + y**2)
 
-    L = math.sqrt(z**2 + (l - coxa)**2)
+    L = np.sqrt(z**2 + (l - coxa)**2)
 
-    gamma = math.degrees(math.atan2(x,y))
-
-    alpha1 = math.acos(z/L)
-
-    alpha2 = math.acos((tibia**2 - femur**2 - L**2)/(-2 * femur * L))
-
-    alpha = math.degrees(alpha1 + alpha2)
-
-    beta = math.degrees(math.acos((L**2 - tibia**2 - femur**2)/(-2 * tibia * femur)))
+    gamma = np.degrees(np.atan2(x,y))
 
 
-    return (120 - gamma, alpha, 270 - beta)
+    alpha1 = np.acos(z/L)
+
+    alpha2 = np.acos((tibia**2 - femur**2 - L**2)/(-2 * femur * L))
+
+    alpha = np.degrees(alpha1 + alpha2)
+
+    beta = np.degrees(np.acos((L**2 - tibia**2 - femur**2)/(-2 * tibia * femur)))
+
+
+    return (round(120 + gamma), round(alpha), round(270 - beta))
+
+def linear_interpol(x_i,y_i,x_f,y_f,res):
+    walk_path = []
+    z_height = 25
+    
+    # print(x_i)
+    # print(y_i)
+
+    # print(x_f)
+    # print(y_f)
+
+    move_x = abs(x_f-x_i)/res
+    move_y = abs(y_f-y_i)/res
+
+    curr_x = x_i
+    curr_y = y_i
+    for i in range(res+1):
+        walk_path.append(leg_IK((curr_x,curr_y,z_height)))
+        curr_x = curr_x-move_x
+        curr_y = curr_y-move_y
+        i = i + 1
+
+
+    return(walk_path)
+
+
+def rotate_2D(x,y,rot_ang):
+    rad_ang = np.radians(rot_ang)
+    x_p = x * np.cos(rad_ang) + y * np.sin(rad_ang)
+    y_p = -x * np.sin(rad_ang) + y * np.cos(rad_ang)
+
+    return round(x_p), round(y_p)
+
+p1 = rotate_2D(150,100,45)
+p2 = rotate_2D(-125,100,45)
 
 
 
-f_b_ang = 74.5
+print(linear_interpol(150,175,-150,175,3))
+print(linear_interpol(*rotate_2D(150,150,-45),*rotate_2D(-150,150,-45),5))
 
-
-x = 50 
-y = 150
-
-x_p = x * math.cos(f_b_ang) - y * math.sin(f_b_ang)
-y_p = x * math.sin(f_b_ang) + y * math.cos(f_b_ang)
-
-t1,t2,t3 = leg_IK((50,150,25))
-print(t1,t2,t3)
-
-t1,t2,t3 = leg_IK((25,150,25))
-print(t1,t2,t3)
-
-t1,t2,t3 = leg_IK((0,150,25))
-print(t1,t2,t3)
-
-t1,t2,t3 = leg_IK((-25,150,25))
-print(t1,t2,t3)
-
-t1,t2,t3 = leg_IK((-50,150,25))
-print(t1,t2,t3)
-
-
-print('\n')
-
-x_p1 = 50 * math.cos(f_b_ang) - 150 * math.sin(f_b_ang)
-y_p1 = 50 * math.sin(f_b_ang) + 150 * math.cos(f_b_ang)
-t1,t2,t3 = leg_IK((x_p1,y_p1,25))
-print(t1,t2,t3)
-
-x_p2 = 25 * math.cos(f_b_ang) - 150 * math.sin(f_b_ang)
-y_p2 = 25 * math.sin(f_b_ang) + 150 * math.cos(f_b_ang)
-t1,t2,t3 = leg_IK((x_p2,y_p2,25))
-print(t1,t2,t3)
-
-x_p3 = 0 * math.cos(f_b_ang) - 150 * math.sin(f_b_ang)
-y_p3 = 0 * math.sin(f_b_ang) + 150 * math.cos(f_b_ang)
-t1,t2,t3 = leg_IK((x_p3,y_p3,25))
-print(t1,t2,t3)
-
-x_p4 = -25 * math.cos(f_b_ang) - 150 * math.sin(f_b_ang)
-y_p4 = -25 * math.sin(f_b_ang) + 150 * math.cos(f_b_ang)
-t1,t2,t3 = leg_IK((x_p4,y_p4,25))
-print(t1,t2,t3)
-
-x_p5 = -50 * math.cos(f_b_ang) - 150 * math.sin(f_b_ang)
-y_p5 = -50 * math.sin(f_b_ang) + 150 * math.cos(f_b_ang)
-t1,t2,t3 = leg_IK((x_p5,y_p5,25))
-print(t1,t2,t3)

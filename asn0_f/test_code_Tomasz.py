@@ -2,6 +2,8 @@ import time
 import sys
 import signal
 import threading
+import numpy as np
+import matplotlib.pyplot as plt
 # import ros_robot_controller_sdk as rrc
 # from sonar import Sonar
 
@@ -46,34 +48,105 @@ class Spyder:
         # s.setPixelColor(1,(255,0,0))
 
 
-    def move_leg(self, leg_id, inner_serv_ang, mid_serv_ang, end_serv_ang):
+    def move_legs(self, lst_of_legs):
+        
+        leg_drive_list = []
+        for curr_leg in lst_of_legs:
 
-        if leg_id > 3:
-            # Inner Servo Position
-            isp = self.deg_to_serv_r(inner_serv_ang)
+            leg_id = curr_leg[0]
+            inner_serv_ang = curr_leg[1]
+            mid_serv_ang = curr_leg[2]
+            end_serv_ang = curr_leg[3]
 
-            # Middle Servo Position
-            msp = self.deg_to_serv_r(mid_serv_ang)
+            if leg_id > 3:
+                # Inner Servo Position
+                isp = self.deg_to_serv_r(inner_serv_ang)
 
-            # End Servo Positon
-            esp = self.deg_to_serv_r(end_serv_ang)
+                # Middle Servo Position
+                msp = self.deg_to_serv_r(mid_serv_ang)
+
+                # End Servo Positon
+                esp = self.deg_to_serv_r(end_serv_ang)
+            else:
+                # Inner Servo Position
+                isp = self.deg_to_serv_l(inner_serv_ang)
+
+                # Middle Servo Position
+                msp = self.deg_to_serv_l(mid_serv_ang)
+
+                # End Servo Positon
+                esp = self.deg_to_serv_l(end_serv_ang)
+
+            leg = self.legs[leg_id]
+            
+            leg_joints = [[leg[0],isp],[leg[1],msp],[leg[2],esp]]
+            for i in range(3):
+                leg_drive_list.append(leg_joints[i])
+                i += 1
+
+        # board.bus_servo_set_position(self.s_speed, leg_drive_list)
+
+        print(leg_drive_list)
+
+    import numpy as np
+
+    def leg_IK(self,leg_id,desired_pos):
+        if leg_id == 1 or leg_id == 4:
+            gamma_add = -120
         else:
-            # Inner Servo Position
-            isp = self.deg_to_serv_l(inner_serv_ang)
+            gamma_add = 120
+            
+        coxa = 44.6
 
-            # Middle Servo Position
-            msp = self.deg_to_serv_l(mid_serv_ang)
+        femur = 75.0
 
-            # End Servo Positon
-            esp = self.deg_to_serv_l(end_serv_ang)
+        tibia = 126.5
 
-        # Leg for Motor Control
-        leg = self.legs[leg_id]
+        x, y, z = map(float,desired_pos)
 
-        # board.bus_servo_set_position(self.s_speed, [leg[0], isp], [leg[1], msp], [leg[2], esp])
+        l = np.sqrt(x**2 + y**2)
 
-        print(leg_id, [leg[0], isp], [leg[1], msp], [leg[2], esp])
+        L = np.sqrt(z**2 + (l - coxa)**2)
 
+        gamma = np.degrees(np.atan2(x,y))
+
+        alpha1 = np.acos(z/L)
+
+        alpha2 = np.acos((tibia**2 - femur**2 - L**2)/(-2 * femur * L))
+
+        alpha = np.degrees(alpha1 + alpha2)
+
+        beta = np.degrees(np.acos((L**2 - tibia**2 - femur**2)/(-2 * tibia * femur)))
+
+        return (round(abs(gamma_add + gamma)), round(alpha), round(270 - beta))
+
+    def linear_interpol(self,leg_id,x_i,y_i,x_f,y_f,res):
+        walk_path = []
+        z_height = 25
+        
+        move_x = abs(x_f-x_i)/res
+        move_y = abs(y_f-y_i)/res
+
+        curr_x = x_i
+        curr_y = y_i
+        for i in range(res+1):
+            walk_path.append((leg_id,*self.leg_IK(leg_id,(curr_x,curr_y,z_height))))
+            curr_x = curr_x-move_x
+            curr_y = curr_y-move_y
+            i+=1
+
+        if leg_id == 1 or leg_id == 4:
+            walk_path.reverse()
+
+        print(walk_path)
+        return(walk_path)
+
+    def rotate_2D(self,x,y,rot_ang):
+        rad_ang = np.radians(rot_ang)
+        x_p = x * np.cos(rad_ang) + y * np.sin(rad_ang)
+        y_p = -x * np.sin(rad_ang) + y * np.cos(rad_ang)
+
+        return round(x_p), round(y_p)
 
     def resting_pos(self):
         
@@ -86,306 +159,53 @@ class Spyder:
             #    90.0 --> 500
             #   112.5 --> 625
             #   139.5 --> 775    
-            self.move_leg(i+1, 120, 150, 186)
-
-            # Turns off Servos in Leg
-            # board.bus_servo_stop([*self.legs[i]])
+            self.move_legs([[i+1, 120, 150, 186]])
 
             i += 1
 
         print("\n")
+    
+    def compose_walk(self):
 
-    def turn_30(self, R_or_L, num_turns):
-        
-        # Reset Robot to Resting Configuration
-        self.resting_pos()
-        time.sleep(self.sleep_t)
+        # Lift Leg From Rest 
 
-        if R_or_L:  # Turn Right
-            
-            alternate_cycle_r = False
-            i = 0
+        # First-Half Raising Parabolic Motion 
 
-            while i != num_turns:
-                if not alternate_cycle_r:
-                    # Turn and Lift Legs 2, 4, 6 by 30 Degrees
-                    self.move_leg(2, 160.19, 160, 180)
-                    self.move_leg(4, 73.98, 160, 180)
-                    self.move_leg(6, 79.91, 160, 180)
-                    time.sleep(self.sleep_t)
+        # Linear Moving Motion
 
-                    # Drop Legs 2, 4, 6
-                    self.move_leg(2, 160.19, 150, 186)
-                    self.move_leg(4, 73.98, 150, 186)
-                    self.move_leg(6, 79.91, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    # Lift Leg 1, 3, 5
-                    self.move_leg(1, 120, 160, 180)
-                    self.move_leg(3, 120, 160, 180)
-                    self.move_leg(5, 120, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Restore Legs 2, 4, 6
-                    self.move_leg(2, 120, 150, 186)
-                    self.move_leg(4, 120, 150, 186)
-                    self.move_leg(6, 120, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    i += 1
-                    alternate_cycle_r = True
-                    print("\n")
-
-                else:
-
-                    # Turn and Lift Legs 1, 3, 5 by 30 Degrees
-                    self.move_leg(1, 160.19, 160, 180)
-                    self.move_leg(3, 166.02, 160, 180)
-                    self.move_leg(5, 79.91, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Drop Legs 1, 3, 5
-                    self.move_leg(1, 160.19, 150, 186)
-                    self.move_leg(3, 166.02, 150, 186)
-                    self.move_leg(5, 79.91, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    # Lift Leg 2, 4, 6
-                    self.move_leg(2, 120, 160, 180)
-                    self.move_leg(4, 120, 160, 180)
-                    self.move_leg(6, 120, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Restore Legs 1, 3, 5
-                    self.move_leg(1, 120, 150, 186)
-                    self.move_leg(3, 120, 150, 186)
-                    self.move_leg(5, 120, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    i += 1
-                    alternate_cycle_r = False
-                    print("\n")
-
-            self.resting_pos()
-
-        else:   # Turn Left
-
-            alternate_cycle_l = False
-            i = 0
-
-            while i != num_turns:
-                if not alternate_cycle_l:
-                    # Turn and Lift Legs 2, 4, 6 by 30 Degrees
-                    self.move_leg(2, 70.81, 160, 180)
-                    self.move_leg(4, 166.02, 160, 180)
-                    self.move_leg(6, 160.09, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Drop Legs 2, 4, 6
-                    self.move_leg(2, 70.81, 150, 186)
-                    self.move_leg(4, 166.02, 150, 186)
-                    self.move_leg(6, 160.09, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    # Lift Leg 1, 3, 5
-                    self.move_leg(1, 120, 160, 180)
-                    self.move_leg(3, 120, 160, 180)
-                    self.move_leg(5, 120, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Restore Legs 2, 4, 6
-                    self.move_leg(2, 120, 150, 186)
-                    self.move_leg(4, 120, 150, 186)
-                    self.move_leg(6, 120, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    i += 1
-                    alternate_cycle_l = True
-                    print("\n")
-
-                else:
-
-                    # Turn and Lift Legs 1, 3, 5 by 30 Degrees
-                    self.move_leg(1, 79.81, 160, 180)
-                    self.move_leg(3, 73.98, 160, 180)
-                    self.move_leg(5, 160.09, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Drop Legs 1, 3, 5
-                    self.move_leg(1, 79.81, 150, 186)
-                    self.move_leg(3, 73.98, 150, 186)
-                    self.move_leg(5, 160.09, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    # Lift Leg 2, 4, 6
-                    self.move_leg(2, 120, 160, 180)
-                    self.move_leg(4, 120, 160, 180)
-                    self.move_leg(6, 120, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Restore Legs 1, 3, 5
-                    self.move_leg(1, 120, 150, 186)
-                    self.move_leg(3, 120, 150, 186)
-                    self.move_leg(5, 120, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    i += 1
-                    alternate_cycle_l = False
-                    print("\n")
-
-            self.resting_pos()
-            
-    def turn_90(self, R_or_L):
-
-        self.turn_30(R_or_L,3)
+        # Second-Half Parabolic Raising Motion
 
 
-    def simple_walk(self, F_or_B, num_steps):
+        pass
 
-        self.resting_pos()
+    def tripod_gait(self):
+        pass
 
-        if F_or_B: # Walk Forward
-            
-            alternate_walk_f = False
-            i = 0
-            while i != num_steps:
-                
-                if not alternate_walk_f:
-                    # Shift Legs 2, 4 and 6 Forward
-                    self.move_leg(2, 135, 160, 180)
-                    self.move_leg(4, 135, 160, 180)
-                    self.move_leg(6, 135, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Drop Legs 2, 4 and 6
-                    self.move_leg(2, 135, 150, 186)
-                    self.move_leg(4, 135, 150, 186)
-                    self.move_leg(6, 135, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    # Lift Legs 1, 3, 5
-                    self.move_leg(1, 120, 160, 180)
-                    self.move_leg(3, 120, 160, 180)
-                    self.move_leg(5, 120, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Restore Legs 2, 4, 6
-                    self.move_leg(2, 120, 150, 186)
-                    self.move_leg(4, 120, 150, 186)
-                    self.move_leg(6, 120, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    i += 1
-                    alternate_walk_f = True
-
-                else:
-
-                    # Shift Legs 1, 3 and 5 Forward
-                    self.move_leg(1, 135, 160, 180)
-                    self.move_leg(3, 135, 160, 180)
-                    self.move_leg(5, 135, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Drop Legs 1, 3 and 5
-                    self.move_leg(1, 135, 150, 186)
-                    self.move_leg(3, 135, 150, 186)
-                    self.move_leg(5, 135, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    # Lift Legs 2, 4, 6
-                    self.move_leg(2, 120, 160, 180)
-                    self.move_leg(4, 120, 160, 180)
-                    self.move_leg(6, 120, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Restore Legs 2, 4, 6
-                    self.move_leg(2, 120, 150, 186)
-                    self.move_leg(4, 120, 150, 186)
-                    self.move_leg(6, 120, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    i += 1
-                    alternate_walk_f = False
-        else: # Walk Backwards
-            alternate_walk_b = False
-            i = 0
-            while i != num_steps:
-                
-                if not alternate_walk_b:
-                    # Shift Legs 2, 4 and 6 Forward
-                    self.move_leg(2, 105, 160, 180)
-                    self.move_leg(4, 105, 160, 180)
-                    self.move_leg(6, 105, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Drop Legs 2, 4 and 6
-                    self.move_leg(2, 105, 150, 186)
-                    self.move_leg(4, 105, 150, 186)
-                    self.move_leg(6, 105, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    # Lift Legs 1, 3, 5
-                    self.move_leg(1, 120, 160, 180)
-                    self.move_leg(3, 120, 160, 180)
-                    self.move_leg(5, 120, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Restore Legs 2, 4, 6
-                    self.move_leg(2, 120, 150, 186)
-                    self.move_leg(4, 120, 150, 186)
-                    self.move_leg(6, 120, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    i += 1
-                    alternate_walk_b = True
-
-                else:
-
-                    # Shift Legs 1, 3 and 5 Forward
-                    self.move_leg(1, 105, 160, 180)
-                    self.move_leg(3, 105, 160, 180)
-                    self.move_leg(5, 105, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Drop Legs 1, 3 and 5
-                    self.move_leg(1, 105, 150, 186)
-                    self.move_leg(3, 105, 150, 186)
-                    self.move_leg(5, 105, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    # Lift Legs 2, 4, 6
-                    self.move_leg(2, 120, 160, 180)
-                    self.move_leg(4, 120, 160, 180)
-                    self.move_leg(6, 120, 160, 180)
-                    time.sleep(self.sleep_t)
-
-                    # Restore Legs 2, 4, 6
-                    self.move_leg(2, 120, 150, 186)
-                    self.move_leg(4, 120, 150, 186)
-                    self.move_leg(6, 120, 150, 186)
-                    time.sleep(self.sleep_t)
-
-                    i += 1
-                    alternate_walk_b = False
-
-        self.resting_pos()
 
 if __name__ == "__main__":
-    robot = Spyder(0.5,curr_legs)
+    robot = Spyder(0.25,curr_legs)
 
     robot.resting_pos()
-    print("\n")
+    #print("\n")
 
-    # robot.turn_30(1,1)
-    # print("Right 30 Degree Turn Complete")
+    walk_leg1 = robot.linear_interpol(1,*robot.rotate_2D(150,190,-45),*robot.rotate_2D(-150,190,-45),7)
+    walk_leg2 = robot.linear_interpol(2,*robot.rotate_2D(150,190,0),*robot.rotate_2D(-150,190,0),7)
+    walk_leg3 = robot.linear_interpol(3,*robot.rotate_2D(150,190,-45),*robot.rotate_2D(-150,190,-45),7)
+    walk_leg4 = robot.linear_interpol(4,*robot.rotate_2D(150,190,-45),*robot.rotate_2D(-150,190,-45),7)
+    walk_leg5 = robot.linear_interpol(5,*robot.rotate_2D(150,190,0),*robot.rotate_2D(-150,190,0),7)
+    walk_leg6 = robot.linear_interpol(6,*robot.rotate_2D(150,190,-45),*robot.rotate_2D(-150,190,-45),7)
+    
+    inner = [["I" + str(i),i[1]] for i in walk_leg1]
+    middle = [["M" + str(i),i[2]] for i in walk_leg1]
+    outer = [["O" + str(i),i[3]] for i in walk_leg1]
 
-    # robot.turn_30(0,1)
-    # print("Left 30 Degree Turn Complete")
+    plt.bar([i[0] for i in inner],[i[1] for i in inner])
+    plt.bar([i[0] for i in middle],[i[1] for i in middle])
+    plt.bar([i[0] for i in outer],[i[1] for i in outer])
+    plt.show()
+    
+    print(robot.leg_IK(2,(0,190,50)))
 
-    # robot.turn_90(1)
-    # print("Right 90 Degree Turn Complete")
 
-    # robot.turn_90(0)
-    # print("Left 90 Degree Turn Complete")
-
-    robot.simple_walk(1,2)
+    # robot.move_legs(walk_leg1)
+    
