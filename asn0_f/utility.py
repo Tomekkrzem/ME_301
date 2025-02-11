@@ -1,4 +1,5 @@
 import time
+from collections import deque
 import sys
 import signal
 import threading
@@ -33,12 +34,12 @@ def move_leg(leg_id, horizontal_pos, first_segment_pos, second_segment_pos):
 def walk_forward():
     #Lifted legs and move first set
     move_leg(1, 300, 350, 375)
-    move_leg(3, 550, 350, 375)
+    move_leg(3, 500, 350, 375)
     move_leg(5, 600, 650, 625)
     uSleep(0.5)
-
+    
     move_leg(1, 300, 375, 225)
-    move_leg(3, 550, 375, 225)
+    move_leg(3, 500, 375, 225)
     move_leg(5, 600, 625, 775)
     uSleep(1)
 
@@ -49,8 +50,8 @@ def walk_forward():
     uSleep(0.5)
 
     #Move on first
-    move_leg(1, 500, 375, 225)
-    move_leg(3, 700, 375, 225)
+    move_leg(1, 550, 375, 225)
+    move_leg(3, 750, 375, 225)
     move_leg(5, 400, 625, 775)
     uSleep(1)
 
@@ -60,10 +61,9 @@ def walk_forward():
     move_leg(6, 600, 625, 775)
     uSleep(1)
 
-
     #Lift first
     move_leg(1, 300, 350, 375)
-    move_leg(3, 550, 350, 375)
+    move_leg(3, 500, 350, 375)
     move_leg(5, 600, 650, 625)
     uSleep(0.5)
 
@@ -72,6 +72,7 @@ def walk_forward():
     move_leg(4, 470, 625, 775)
     move_leg(6, 420, 625, 775)
     uSleep(1)
+
 
 #Sets all legs to default standing positions
 def reset_legs():
@@ -86,7 +87,9 @@ def reset_legs():
 #new turn
 def turn(RorL, degree):
     newdeg = min(45, degree)
-    differance = int(90 / (45/newdeg))
+    differance = int(110 / (45/newdeg))
+    if RorL:
+        differance -= 7
     forwards = 500 - differance
     backwards = 500 + differance
     if(RorL):#Turning left
@@ -135,7 +138,7 @@ def turn(RorL, degree):
     move_leg(5, backwards, 625, 775)
     uSleep(1)
 
-    if (degree >= 45):
+    if (degree > 45):
         turn(RorL, degree - 45)
 
     else:
@@ -170,135 +173,95 @@ def turn(RorL, degree):
             move_leg(6, 500, 625, 775)
         uSleep(1)
 
-# Old Turn
-# def turn(RorL, degree):
-#     #Will setup degree once turn rate is known
-#     for i in range(int(degree/45)):
-#         if(RorL):#Turning left
-#             #Lift second set
-#             move_leg(2, 600, 350, 500)
-#             move_leg(4, 600, 650, 500)
-#             move_leg(6, 600, 650, 500)
-#             uSleep(0.5)
-
-#             #Stand on second
-#             move_leg(2, 600, 375, 225)
-#             move_leg(4, 600, 625, 775)
-#             move_leg(6, 600, 625, 775)
-#             uSleep(1)
-
-#             #Lift first
-#             move_leg(1, 600, 350, 500)
-#             move_leg(3, 600, 350, 500)
-#             move_leg(5, 600, 650, 500)
-#             uSleep(0.5)
-
-#             #Turn on second
-#             move_leg(2, 400, 375, 225)
-#             move_leg(4, 400, 625, 775)
-#             move_leg(6, 400, 625, 775)
-#             uSleep(1)
-
-#             #Stand on first
-#             move_leg(1, 600, 375, 225)
-#             move_leg(3, 600, 375, 225)
-#             move_leg(5, 600, 625, 775)
-#             uSleep(1)
-
-#             #Lift second set
-#             move_leg(2, 600, 350, 500)
-#             move_leg(4, 600, 650, 500)
-#             move_leg(6, 600, 650, 500)
-#             uSleep(0.5)
-
-#             #Turn on first
-#             move_leg(1, 400, 375, 225)
-#             move_leg(3, 400, 375, 225)
-#             move_leg(5, 400, 625, 775)
-#             uSleep(1)
-
-#         else:#turning right
-#             #Lifted legs and move first set
-#             move_leg(1, 400, 350, 500)
-#             move_leg(3, 400, 350, 500)
-#             move_leg(5, 400, 650, 500)
-#             uSleep(0.5)
-
-#             move_leg(1, 400, 375, 225)
-#             move_leg(3, 400, 375, 225)
-#             move_leg(5, 400, 625, 775)
-#             uSleep(1)
-
-#             #Lift second set
-#             move_leg(2, 400, 350, 500)
-#             move_leg(4, 400, 650, 500)
-#             move_leg(6, 400, 650, 500)
-#             uSleep(0.5)
-
-#             #Turn on first
-#             move_leg(1, 600, 375, 225)
-#             move_leg(3, 600, 375, 225)
-#             move_leg(5, 600, 625, 775)
-#             uSleep(1)
-
-#             #Stand on second
-#             move_leg(2, 400, 375, 225)
-#             move_leg(4, 400, 625, 775)
-#             move_leg(6, 400, 625, 775)
-#             uSleep(1)
-
-#             #Lift first
-#             move_leg(1, 400, 350, 500)
-#             move_leg(3, 400, 350, 500)
-#             move_leg(5, 400, 650, 500)
-#             uSleep(0.5)
-
-#             #Turn on second
-#             move_leg(2, 600, 375, 225)
-#             move_leg(4, 600, 625, 775)
-#             move_leg(6, 600, 625, 775)
-#             uSleep(1)
-
-#     #reset on legs
-#     if(RorL):
-#         move_leg(2, 500, 375, 225)
-#         move_leg(4, 500, 625, 775)
-#         move_leg(6, 500, 625, 775)
-#         uSleep(1)
-
-#         move_leg(1, 500, 350, 500)
-#         move_leg(3, 500, 350, 500)
-#         move_leg(5, 500, 650, 500)
-#         uSleep(0.5)
-
-#         move_leg(1, 500, 325, 225)
-#         move_leg(3, 500, 325, 225)
-#         move_leg(5, 500, 625, 775)
-
-#     else:
-#         move_leg(1, 500, 375, 225)
-#         move_leg(3, 500, 375, 225)
-#         move_leg(5, 500, 625, 775)
-#         uSleep(1)
-
-#         move_leg(2, 500, 350, 500)
-#         move_leg(4, 500, 650, 500)
-#         move_leg(6, 500, 650, 500)
-#         uSleep(0.5)
-
-#         move_leg(2, 500, 325, 225)
-#         move_leg(4, 500, 625, 775)
-#         move_leg(6, 500, 625, 775)
-#     uSleep(1)
-
 def scan(sonars):
     dists = []
     for son in sonars:
         dists.add(son.get_distance())
     return dists
 
+def turn_sensor(turn):
+    #utility.turn_sensor(125) = right
+    #utility.turn_sensor(875) = left
+    board.bus_servo_set_position(speed, [[21, turn]])
+
+# North = 1, East = 2, South = 3, West = 4
+def move_cardinal(blocks, curpos, newdir):
+    
+    turn_cardinal(curpos[2], newdir)
+
+    for i in range(blocks):
+        walk_block()
+
+    if newdir % 2 == 1:
+        return [curpos[0] + blocks * (curpos[2] - 2), curpos[1], newdir]
+    else:
+        return [curpos[0], curpos[1] + blocks * (curpos[3] - 3) * -1, newdir]
+
+def turn_cardinal(curdir, newdir):
+    diffdir = newdir - curdir
+    if(abs(diffdir) == 2):
+        turn(False, 90)
+        turn(False, 90)
+    elif(diffdir < 0):
+        turn(True, 90)
+    elif(diffdir > 0):
+        turn(False, 90)
+
+def walk_block():
+    for i in range(3):
+        walk_forward()
+    reset_legs()
+
+# maps out the cost of each tile in a given map by their distance from the start
+def mapmap(*map, goal):
+    tileQueue = deque([])
+    setCost(map, goal, 0)
+    # North = 1, East = 2, South = 3, West = 4
+    for i in range(4):
+        if not getObsticle(goal, i):
+            tileQueue.append(getTile(goal, i))
+    
+    _mapmap(*map, tileQueue)
+
+def _mapmap(*map, tileQueue):
+    map_size = map.size()
+    cost = 1
+    while tileQueue:
+        tile = tileQueue.popleft()
+        row, col = tile
+
+        if row < 0 or col < 0 or row >= map_size[0] or col >= map_size[1]:
+            continue  # Ignore out-of-bounds tiles
+
+        # If this tile has already been assigned a lower cost, skip it
+        current_cost = getCost(map, tile)
+        if current_cost is not 0 and current_cost <= cost:
+            continue
+
+        setCost(map, tile, cost)
+
+        for i in range(4):
+            if not getObstacle(tile, i):
+                tileQueue.append(getTile(tile, i))
+
+        cost += 1
+    
+def find_path(map, start, goal):
+    path = []
+    currCost = getCost(start)
+    currTile = start
+    
+    while currCost != 0:
+        for i in range(4):
+            if not getObstacle(tile, i) and currCost > getCost(map, currTile):
+                path.append(i)
+                currTile = getTile(currTile, i)
+    
+    return path
+
+
 def start_timer():
-    return time.time() * 1000
+    return time.time()
 
 def end_timer(timer):
-    return (time.time() * 1000) - timer
+    return time.time() - timer
