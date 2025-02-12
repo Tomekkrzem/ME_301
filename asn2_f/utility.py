@@ -234,8 +234,6 @@ def _mapmap(map, tileQueue):
         for _ in range(level_size):
             tile = tileQueue.popleft()
 
-            print(tile)
-
             if tile[0] < 0 or tile[1] < 0 or tile[0] >= map_size[0] or tile[1] >= map_size[1]:
                 continue  # Ignore out-of-bounds tiles
 
@@ -267,7 +265,7 @@ def find_path(map, start, goal):
 
             nextCost = map.getCost(nextTile[0], nextTile[1])
             if map.getNeighborObstacle(currTile[0], currTile[1], i + 1) == 0 and currCost > nextCost:
-                path.append(i)
+                path.append(i + 1)
                 currTile = nextTile
                 currCost = nextCost
     
