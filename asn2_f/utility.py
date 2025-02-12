@@ -3,6 +3,7 @@ from collections import deque
 import sys
 import signal
 import threading
+import map_
 import ros_robot_controller_sdk as rrc
 from sonar import Sonar
 
@@ -213,52 +214,89 @@ def walk_block():
     reset_legs()
 
 # maps out the cost of each tile in a given map by their distance from the start
-def mapmap(*map, goal):
+def mapmap(map, goal):
     tileQueue = deque([])
-    setCost(map, goal, 0)
     # North = 1, East = 2, South = 3, West = 4
     for i in range(4):
-        if not getObsticle(goal, i):
-            tileQueue.append(getTile(goal, i))
+        if map.getNeighborObstacle(goal[0], goal[1], i+1) == 0:
+            tileQueue.append(getTile(goal, i+1))
     
-    _mapmap(*map, tileQueue)
+    _mapmap(map, tileQueue)
 
-def _mapmap(*map, tileQueue):
-    map_size = map.size()
+    map.setCost(goal[0], goal[1], 0)
+
+def _mapmap(map, tileQueue):
+    map_size = [map.getCostmapSize(True), map.getCostmapSize(False)]
     cost = 1
     while tileQueue:
-        tile = tileQueue.popleft()
-        row, col = tile
+        level_size = len(tileQueue)  # Number of tiles at the current depth
 
-        if row < 0 or col < 0 or row >= map_size[0] or col >= map_size[1]:
-            continue  # Ignore out-of-bounds tiles
+        for _ in range(level_size):
+            tile = tileQueue.popleft()
 
-        # If this tile has already been assigned a lower cost, skip it
-        current_cost = getCost(map, tile)
-        if current_cost is not 0 and current_cost <= cost:
-            continue
+            print(tile)
 
-        setCost(map, tile, cost)
+            if tile[0] < 0 or tile[1] < 0 or tile[0] >= map_size[0] or tile[1] >= map_size[1]:
+                continue  # Ignore out-of-bounds tiles
 
-        for i in range(4):
-            if not getObstacle(tile, i):
-                tileQueue.append(getTile(tile, i))
+            # If this tile has already been assigned a lower cost, skip it
+            current_cost = map.getCost(tile[0], tile[1])
+            if current_cost != 0 and current_cost <= cost:
+                continue
 
+            map.setCost(tile[0], tile[1], cost)
+
+            for i in range(4):
+                if map.getNeighborObstacle(tile[0], tile[1], i + 1) == 0 and (map.getCost(*getTile(tile, i + 1)) == 0):
+                        tileQueue.append(getTile(tile, i + 1))
+        
         cost += 1
+
     
 def find_path(map, start, goal):
     path = []
-    currCost = getCost(start)
+    currCost = map.getCost(start[0],start[1])
     currTile = start
+    map_size = [map.getCostmapSize(True), map.getCostmapSize(False)]
 
     while currCost != 0:
         for i in range(4):
-            if not getObstacle(currTile, i) and currCost > getCost(map, currTile):
+            nextTile = getTile(currTile, i + 1)
+            if nextTile[0] < 0 or nextTile[1] < 0 or nextTile[0] >= map_size[0] or nextTile[1] >= map_size[1]:
+                continue  # Ignore out-of-bounds tiles
+
+            nextCost = map.getCost(nextTile[0], nextTile[1])
+            if map.getNeighborObstacle(currTile[0], currTile[1], i + 1) == 0 and currCost > nextCost:
                 path.append(i)
-                currTile = getTile(currTile, i)
+                currTile = nextTile
+                currCost = nextCost
     
     return path
 
+def getTile(currTile, dir):
+    if dir == 1:
+        return [currTile[0] - 1, currTile[1]]
+    elif dir == 2:
+        return [currTile[0], currTile[1] + 1]
+    elif dir == 3:
+        return [currTile[0] + 1, currTile[1]]
+    elif dir == 4:
+        return [currTile[0], currTile[1] - 1]
+    
+def inputPos():
+    pos = input("Please input your start position in the form of 'X,Y,Direction': ")
+    curpos = [0,0,0]
+    for i in range(2):
+        if pos.index(",") != -1:
+            curpos[i] = int(pos[:pos.index(",")])
+            pos = pos[pos.index(",") + 1:]
+        else:
+            print("invalid string, please input a correct string\n")
+            return inputPos()
+    
+    curpos[2] = int(pos)
+
+    return curpos
 
 def start_timer():
     return time.time()
