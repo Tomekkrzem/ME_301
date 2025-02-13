@@ -19,14 +19,12 @@ if __name__ == "__main__":
     moves = utility.find_path(map, curpos, endpos)
     print(moves)
 
-    for i in range(len(moves)):
-        dir = moves[i]
-        count = 1
-        while moves[i] == moves[i+1]:
-            count += 1
-            i += 1
-        utility.move_cardinal(count, curpos, dir)
+    for move in moves:
+        curpos = utility.move_cardinal(1, curpos, move)
         utility.reset_legs()
+
+    utility.turn_cardinal(curpos[2], endpos[2])
+    curpos[2] = endpos[2]
 
     utility.reset_legs()
 

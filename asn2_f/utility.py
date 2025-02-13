@@ -92,7 +92,7 @@ def turn(RorL, degree):
     newdeg = min(45, degree)
     differance = int(110 / (45/newdeg))
     if RorL:
-        differance -= 7
+        differance -= 9
     forwards = 500 - differance
     backwards = 500 + differance
     if(RorL):#Turning left
@@ -192,23 +192,29 @@ def move_cardinal(blocks, curpos, newdir):
     
     turn_cardinal(curpos[2], newdir)
 
+    reset_legs()
+
+    uSleep(1)
+
+    robot.resting_pos()
     for i in range(blocks):
         walk_block()
 
     if newdir % 2 == 1:
         return [curpos[0] + blocks * (curpos[2] - 2), curpos[1], newdir]
     else:
-        return [curpos[0], curpos[1] + blocks * (curpos[3] - 3) * -1, newdir]
+        return [curpos[0], curpos[1] + blocks * (curpos[2] - 3) * -1, newdir]
 
 def turn_cardinal(curdir, newdir):
     diffdir = newdir - curdir
+    print(f"cur{curdir}, new{newdir}, diff{diffdir}")
     if(abs(diffdir) == 2):
         turn(False, 90)
         turn(False, 90)
-    elif(diffdir < 0):
-        turn(True, 90)
-    elif(diffdir > 0):
+    elif(diffdir == 1 or diffdir == -3):
         turn(False, 90)
+    elif(diffdir == 3 or diffdir == -1):
+        turn(True, 90)
 
 def walk_block():
     for i in range(4):
