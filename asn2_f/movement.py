@@ -52,7 +52,6 @@ def leg_IK(leg_id, desired_pos):
 
     beta = math.degrees(math.acos((L ** 2 - tibia ** 2 - femur ** 2) / (-2 * tibia * femur)))
 
-    print(leg_id, round(120 + gamma), round(alpha), round(120 - beta + 180))
 
     return round(abs(add + gamma)), round(120 + alpha - 90), round(120 - beta + 180)
 
@@ -89,8 +88,6 @@ def linear_interpol(leg_id, pos_i, pos_f, rot_ang, res):
     curr_x = round(x_i)
     curr_y = round(y_i)
     for i in range(res):
-        print(curr_x)
-        print(curr_y)
         # Updating Leg Angles
         walk_path.append((leg_id, *leg_IK(leg_id, (curr_x, curr_y, z))))
 
@@ -258,7 +255,7 @@ class Spyder:
 
             # Old Rest Position
             # self.move_legs([[i+1, 120, 150, 186]])
-            self.move_legs([[i + 1, 120, 154, 186]])
+            self.move_legs([[i + 1, 120, 176, 203]])
 
             i += 1
 
@@ -269,15 +266,13 @@ class Spyder:
         rot_ang = self.servo_offset[leg]
 
         if leg in [1, 3, 4, 6]:
-            start_pos = [start_pos[0] + 70, start_pos[1] - 17, start_pos[2]]
-            end_pos = [end_pos[0] + 70, end_pos[1] - 17, end_pos[2]]
-            p_lst = [(p[0] + 70, p[1] - 17, p[2]) for p in p_lst]
+            start_pos = [start_pos[0] + 65, start_pos[1] - 20, start_pos[2]]
+            end_pos = [end_pos[0] + 65, end_pos[1] - 20, end_pos[2]]
+            p_lst = [(p[0] + 65, p[1] - 20, p[2]) for p in p_lst]
 
         move_path = linear_interpol(leg, start_pos, end_pos, rot_ang, res)[0]
 
         raise_points = [(*rotate_2D([point[0], point[1]], rot_ang), point[2]) for point in p_lst]
-
-        print(raise_points)
 
         raise_path = bezier_curve(leg, raise_points, res)[-1]
 
@@ -288,7 +283,7 @@ class Spyder:
 
     def tripod_gait(self, travel_dist, res):
 
-        y_dist = 191
+        y_dist = 197
 
         s_pos = [travel_dist / 2, y_dist, 17]
         e_pos = [-travel_dist / 2, y_dist, 17]
@@ -308,10 +303,10 @@ class Spyder:
 
         while not walk_complete:
             if count == res * 2: count = 0
-            print(count)
             walk_points = []
             for leg in leg_paths:
                 walk_points.append(leg[count])
+            
 
             self.move_legs(walk_points)
             count += 1
@@ -325,7 +320,16 @@ if __name__ == "__main__":
     robot = Spyder(0.047)
 
     robot.resting_pos()
+    
+    time.sleep(1)
+    
+    robot.tripod_gait(100,7)
+    robot.tripod_gait(100,7)
+    robot.tripod_gait(100,7)
+    robot.tripod_gait(100,7)
+    
+    time.sleep(1)
 
-
+    robot.resting_pos()
 
 
