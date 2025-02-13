@@ -1,14 +1,14 @@
 import utility
-import map_
+import map_301
 import time
-#from sonar import Sonar
+from sonar import Sonar
 
-#sonar = Sonar()
+sonar = Sonar()
 
 # Main loop to continuously walk forward
 if __name__ == "__main__":
-    #utility.reset_legs()
-    map = map_.CSME301Map()
+    utility.reset_legs()
+    map = map_301.CSME301Map()
     map.printObstacleMap()
     curpos = utility.inputPos()
     endpos = utility.inputPos()
@@ -19,10 +19,28 @@ if __name__ == "__main__":
     moves = utility.find_path(map, curpos, endpos)
     print(moves)
 
-    for move in moves:
-        utility.move_cardinal(1, curpos, move)
+    for i in range(len(moves)):
+        dir = moves[i]
+        count = 1
+        while moves[i] == moves[i+1]:
+            count += 1
+            i += 1
+        utility.move_cardinal(count, curpos, dir)
+        utility.reset_legs()
+
+    utility.reset_legs()
+
+    # #Exploring
+    # utility.reset_legs()
+    # map = map_.CSME301Map()
+    # map.clearObstacleMap()
+    # map.clearCostMap()
+    # curpos = [0,0,1]
     
-    utility.turn_cardinal(curpos[2], endpos[2])
+
+
+    # #Localization
+    # utility.turn_cardinal(curpos[2], endpos[2])
     
     # if curpos[0] < endpos[0]:
     #     curpos = utility.move_cardinal(endpos[0] - curpos[0], curpos, 3)
@@ -31,5 +49,3 @@ if __name__ == "__main__":
     #     curpos = utility.move_cardinal(endpos[1] - curpos[1], curpos, 2)
 
     # utility.turn_cardinal(curpos[2], endpos[2])
-
-    #utility.reset_legs()

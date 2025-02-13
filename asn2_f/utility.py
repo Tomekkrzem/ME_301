@@ -4,11 +4,13 @@ import sys
 import signal
 import threading
 import map_
+import movement
 import ros_robot_controller_sdk as rrc
 from sonar import Sonar
 
 
 board = rrc.Board()
+robot = movement.Spyder(0.057)
 sonar = Sonar()
 start = True
 speed = 0.1
@@ -174,11 +176,11 @@ def turn(RorL, degree):
             move_leg(6, 500, 625, 775)
         uSleep(1)
 
-def scan(sonars):
-    dists = []
-    for son in sonars:
-        dists.add(son.get_distance())
-    return dists
+# def scan(sonars):
+#     dists = []
+#     for son in sonars:
+#         dists.add(son.get_distance())
+#     return dists
 
 def turn_sensor(turn):
     #utility.turn_sensor(125) = right
@@ -209,8 +211,8 @@ def turn_cardinal(curdir, newdir):
         turn(False, 90)
 
 def walk_block():
-    for i in range(3):
-        walk_forward()
+    for i in range(4):
+        robot.tripod_gait(125,7)
     reset_legs()
 
 # maps out the cost of each tile in a given map by their distance from the start
