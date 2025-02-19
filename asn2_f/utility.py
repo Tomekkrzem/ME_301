@@ -3,7 +3,7 @@ from collections import deque
 import sys
 import signal
 import threading
-import map_
+import map_301
 import movement
 import ros_robot_controller_sdk as rrc
 from sonar import Sonar
@@ -90,9 +90,9 @@ def reset_legs():
 #new turn
 def turn(RorL, degree):
     newdeg = min(45, degree)
-    differance = int(110 / (45/newdeg))
+    differance = int(110 / (45/newdeg)) + 15
     if RorL:
-        differance -= 9
+        differance -= 19
     forwards = 500 - differance
     backwards = 500 + differance
     if(RorL):#Turning left
@@ -176,16 +176,15 @@ def turn(RorL, degree):
             move_leg(6, 500, 625, 775)
         uSleep(1)
 
-# def scan(sonars):
-#     dists = []
-#     for son in sonars:
-#         dists.add(son.get_distance())
-#     return dists
+def scan():
+    return sonar.get_distance()
 
 def turn_sensor(turn):
     #utility.turn_sensor(125) = right
     #utility.turn_sensor(875) = left
-    board.bus_servo_set_position(speed, [[21, turn]])
+    board.bus_servo_set_position(0.01, [[21, turn]])
+    uSleep(0.2)
+    return scan()
 
 # North = 1, East = 2, South = 3, West = 4
 def move_cardinal(blocks, curpos, newdir):
@@ -206,8 +205,9 @@ def move_cardinal(blocks, curpos, newdir):
         return [curpos[0], curpos[1] + blocks * (curpos[2] - 3) * -1, newdir]
 
 def turn_cardinal(curdir, newdir):
+    if newdir == 0:
+        newdir = 4
     diffdir = newdir - curdir
-    print(f"cur{curdir}, new{newdir}, diff{diffdir}")
     if(abs(diffdir) == 2):
         turn(False, 90)
         turn(False, 90)
@@ -218,7 +218,7 @@ def turn_cardinal(curdir, newdir):
 
 def walk_block():
     for i in range(4):
-        robot.tripod_gait(125,7)
+        robot.tripod_gait(105,7)
     reset_legs()
 
 # maps out the cost of each tile in a given map by their distance from the start
@@ -258,7 +258,54 @@ def _mapmap(map, tileQueue):
         
         cost += 1
 
+def explore_map(map, curpos):
+    tileQueue = deque([])
+    completed = []
+    # North = 1, East = 2, South = 3, West = 4
+    for i in range(3):
+        dist = turn_sensor(125 + i * 375)
+        if dist < 500 :
+            map.setObstacle(curpos[0], curpos[1], 1, curpos[2] + i - 1)
+        else:
+            tileQueue.append(getTile(curpos, curpos[2] + i - 1))
     
+    dist = 0
+    if(map.getNeighborObstacle(curpos[0], curpos[1], 1, 4)):
+        turn_cardinal(curpos[2], 4)
+        curpos[2] = 4
+        dist = turn_sensor(125)
+    else:
+        turn_cardinal(curpos[2], 2)
+        curpos[2] = 2
+        dist = turn_sensor(875)
+
+    if dist < 500 :
+        map.setObstacle(curpos[0], curpos[1], 1, 3)
+    else:
+        tileQueue.append(getTile(curpos, 3))
+
+    completed.append(curpos)
+    
+    while tileQueue:
+        tile = tileQueue.pop()
+        
+        moves = find_path(map, curpos, tile)
+
+        for move in moves:
+            curpos = move_cardinal(1, curpos, move)
+            reset_legs()
+    
+        for i in range(3):
+            if completed.__contains__(getTile(curpos, curpos[2] + i - 1)):
+                dist = turn_sensor(125 + i * 375)
+                if dist < 500 :
+                    map.setObstacle(curpos[0], curpos[1], 1, curpos[2] + i - 1)
+                else:
+                    tileQueue.append(getTile(curpos, curpos[2] + i - 1))
+        
+        completed.append(curpos)
+        map.printCostMap()
+
 def find_path(map, start, goal):
     path = []
     currCost = map.getCost(start[0],start[1])
@@ -286,23 +333,17 @@ def getTile(currTile, dir):
         return [currTile[0], currTile[1] + 1]
     elif dir == 3:
         return [currTile[0] + 1, currTile[1]]
-    elif dir == 4:
+    elif dir == 4 or dir == 0:
         return [currTile[0], currTile[1] - 1]
     
 def inputPos():
-    pos = input("Please input your start position in the form of 'X,Y,Direction': ")
-    curpos = [0,0,0]
-    for i in range(2):
-        if pos.index(",") != -1:
-            curpos[i] = int(pos[:pos.index(",")])
-            pos = pos[pos.index(",") + 1:]
-        else:
-            print("invalid string, please input a correct string\n")
-            return inputPos()
+    pos = input("Please input your start position in the form of 'X,Y,Direction': ").split(",")
     
-    curpos[2] = int(pos)
-
-    return curpos
+    if(len(pos) != 3):
+        print("invalid string, please input a correct string\n")
+        return inputPos()
+    
+    return [int(pos[0]), int(pos[1]), int(pos[2])]
 
 def start_timer():
     return time.time()
