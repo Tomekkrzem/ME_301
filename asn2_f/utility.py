@@ -85,6 +85,7 @@ def reset_legs():
             move_leg(i, 500, 375, 225)
         else:
             move_leg(i, 500, 625, 775)
+    board.bus_servo_set_position(0.01, [[21, 500]])
     uSleep(1)
 
 #new turn
@@ -171,19 +172,21 @@ def turn(RorL, degree):
             move_leg(6, 500, 650, 625)
             uSleep(0.5)
 
-            move_leg(2, 500, 325, 225)
+            move_leg(2, 500, 375, 225)
             move_leg(4, 500, 625, 775)
             move_leg(6, 500, 625, 775)
         uSleep(1)
 
 def scan():
-    return sonar.get_distance()
+    dist = sonar.getDistance()
+    print(f"Distance: {dist}")
+    return dist
 
 def turn_sensor(turn):
     #utility.turn_sensor(125) = right
     #utility.turn_sensor(875) = left
     board.bus_servo_set_position(0.01, [[21, turn]])
-    uSleep(0.2)
+    uSleep(10)
     return scan()
 
 # North = 1, East = 2, South = 3, West = 4
@@ -200,9 +203,9 @@ def move_cardinal(blocks, curpos, newdir):
         walk_block()
 
     if newdir % 2 == 1:
-        return [curpos[0] + blocks * (curpos[2] - 2), curpos[1], newdir]
+        return [curpos[0] + blocks * (newdir - 2), curpos[1], newdir]
     else:
-        return [curpos[0], curpos[1] + blocks * (curpos[2] - 3) * -1, newdir]
+        return [curpos[0], curpos[1] + blocks * (newdir - 3) * -1, newdir]
 
 def turn_cardinal(curdir, newdir):
     if newdir == 0:
@@ -261,23 +264,22 @@ def _mapmap(map, tileQueue):
 def explore_map(map, curpos):
     tileQueue = deque([])
     completed = []
+    dist = 0
+
+    mapSize = [map.getCostmapSize(True), map.getCostmapSize(False)]
+
     # North = 1, East = 2, South = 3, West = 4
     for i in range(3):
         dist = turn_sensor(125 + i * 375)
+        nextTile = getTile(curpos, curpos[2] - i + 1)
         if dist < 500 :
-            map.setObstacle(curpos[0], curpos[1], 1, curpos[2] + i - 1)
-        else:
-            tileQueue.append(getTile(curpos, curpos[2] + i - 1))
+            map.setObstacle(curpos[0], curpos[1], 1, curpos[2] - i + 1)
+        elif 0 <= nextTile[0] and nextTile[0] < mapSize[0] and 0 <= nextTile[1] and nextTile[1] < mapSize[1]:
+            tileQueue.append(nextTile)
     
-    dist = 0
-    if(map.getNeighborObstacle(curpos[0], curpos[1], 1, 4)):
-        turn_cardinal(curpos[2], 4)
-        curpos[2] = 4
-        dist = turn_sensor(125)
-    else:
-        turn_cardinal(curpos[2], 2)
-        curpos[2] = 2
-        dist = turn_sensor(875)
+    turn_cardinal(curpos[2], 2)
+    curpos[2] = 2
+    dist = turn_sensor(125)
 
     if dist < 500 :
         map.setObstacle(curpos[0], curpos[1], 1, 3)
@@ -287,23 +289,27 @@ def explore_map(map, curpos):
     completed.append(curpos)
     
     while tileQueue:
+        print(f"Tile queue: {tileQueue}")
+        map.clearCostMap()
         tile = tileQueue.pop()
         
+        mapmap(map, tile)
         moves = find_path(map, curpos, tile)
 
         for move in moves:
             curpos = move_cardinal(1, curpos, move)
             reset_legs()
-    
+
         for i in range(3):
-            if completed.__contains__(getTile(curpos, curpos[2] + i - 1)):
+            if not getTile(curpos, curpos[2] - i + 1) in completed:
                 dist = turn_sensor(125 + i * 375)
+                nextTile = getTile(curpos, curpos[2] - i + 1)
                 if dist < 500 :
-                    map.setObstacle(curpos[0], curpos[1], 1, curpos[2] + i - 1)
-                else:
-                    tileQueue.append(getTile(curpos, curpos[2] + i - 1))
-        
-        completed.append(curpos)
+                    map.setObstacle(curpos[0], curpos[1], 1, curpos[2] - i + 1)
+                elif 0 <= nextTile[0] and nextTile[0] < mapSize[0] and 0 <= nextTile[1] and nextTile[1] < mapSize[1]:
+                    tileQueue.append(nextTile)
+            
+            completed.append(curpos)
         map.printCostMap()
 
 def find_path(map, start, goal):
@@ -315,14 +321,12 @@ def find_path(map, start, goal):
     while currCost != 0:
         for i in range(4):
             nextTile = getTile(currTile, i + 1)
-            if nextTile[0] < 0 or nextTile[1] < 0 or nextTile[0] >= map_size[0] or nextTile[1] >= map_size[1]:
-                continue  # Ignore out-of-bounds tiles
-
-            nextCost = map.getCost(nextTile[0], nextTile[1])
-            if map.getNeighborObstacle(currTile[0], currTile[1], i + 1) == 0 and currCost > nextCost:
-                path.append(i + 1)
-                currTile = nextTile
-                currCost = nextCost
+            if not(nextTile[0] < 0 or nextTile[1] < 0 or nextTile[0] >= map_size[0] or nextTile[1] >= map_size[1]):
+                nextCost = map.getCost(nextTile[0], nextTile[1])
+                if map.getNeighborObstacle(currTile[0], currTile[1], i + 1) == 0 and currCost > nextCost:
+                    path.append(i + 1)
+                    currTile = nextTile
+                    currCost = nextCost
     
     return path
 
