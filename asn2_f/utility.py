@@ -91,9 +91,9 @@ def reset_legs():
 #new turn
 def turn(RorL, degree):
     newdeg = min(45, degree)
-    differance = int(110 / (45/newdeg)) + 15
+    differance = int(110 / (45/newdeg)) - 4
     if RorL:
-        differance -= 19
+        differance -= 15
     forwards = 500 - differance
     backwards = 500 + differance
     if(RorL):#Turning left
@@ -101,9 +101,9 @@ def turn(RorL, degree):
         backwards = 500 - differance
 
     #Lift second set
-    move_leg(2, forwards, 350, 375)
-    move_leg(4, forwards, 650, 625)
-    move_leg(6, forwards, 650, 625)
+    move_leg(2, forwards, 150, 100)
+    move_leg(4, forwards, 850, 900)
+    move_leg(6, forwards, 850, 900)
     uSleep(0.5)
 
     #Stand on second
@@ -113,9 +113,9 @@ def turn(RorL, degree):
     uSleep(1)
 
     #Lift first
-    move_leg(1, forwards, 350, 375)
-    move_leg(3, forwards, 350, 375)
-    move_leg(5, forwards, 650, 625)
+    move_leg(1, forwards, 150, 100)
+    move_leg(3, forwards, 150, 100)
+    move_leg(5, forwards, 850, 900)
     uSleep(0.5)
 
     #Turn on second
@@ -131,9 +131,9 @@ def turn(RorL, degree):
     uSleep(1)
 
     #Lift second set
-    move_leg(2, forwards, 350, 375)
-    move_leg(4, forwards, 650, 625)
-    move_leg(6, forwards, 650, 625)
+    move_leg(2, forwards, 150, 100)
+    move_leg(4, forwards, 850, 900)
+    move_leg(6, forwards, 850, 900)
     uSleep(0.5)
 
     #Turn on first
@@ -157,8 +157,8 @@ def turn(RorL, degree):
             move_leg(5, 500, 650, 625)
             uSleep(0.5)
 
-            move_leg(1, 500, 325, 225)
-            move_leg(3, 500, 325, 225)
+            move_leg(1, 500, 375, 225)
+            move_leg(3, 500, 375, 225)
             move_leg(5, 500, 625, 775)
 
         else:
