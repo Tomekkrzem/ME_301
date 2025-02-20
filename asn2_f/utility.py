@@ -13,7 +13,7 @@ board = rrc.Board()
 robot = movement.Spyder(0.057)
 sonar = Sonar()
 start = True
-speed = 0.1
+speed = 0.25
 
 # Assumed leg-motor relations
 legs = {
@@ -186,7 +186,7 @@ def turn_sensor(turn):
     #utility.turn_sensor(125) = right
     #utility.turn_sensor(875) = left
     board.bus_servo_set_position(0.01, [[21, turn]])
-    uSleep(10)
+    uSleep(6)
     return scan()
 
 # North = 1, East = 2, South = 3, West = 4
