@@ -79,14 +79,7 @@ def walk_forward():
 
 #Sets all legs to default standing positions
 def reset_legs():
-    for i in range(6):
-        i = i+1
-        if(i < 4):
-            move_leg(i, 500, 375, 225)
-        else:
-            move_leg(i, 500, 625, 775)
-    board.bus_servo_set_position(0.01, [[21, 500]])
-    uSleep(1)
+    robot.resting_pos()
 
 #new turn
 def turn(RorL, degree):
@@ -177,6 +170,93 @@ def turn(RorL, degree):
             move_leg(6, 500, 625, 775)
         uSleep(1)
 
+def new_turn(RorL, degree):
+    differance = int(110 / (45/min(45, degree))) - 2
+    if RorL:
+        differance -= 14
+    forwards = 500 - differance
+    backwards = 500 + differance
+    if(RorL):#Turning left
+        forwards = 500 + differance
+        backwards = 500 - differance
+
+    #Lift second set
+    move_leg(2, forwards, 150, 100)
+    move_leg(4, forwards, 850, 900)
+    move_leg(6, forwards, 850, 900)
+    uSleep(0.5)
+
+    #Stand on second
+    move_leg(2, forwards, 267, 154)
+    move_leg(4, forwards, 733, 846)
+    move_leg(6, forwards, 733, 846)
+    uSleep(1)
+
+    #Lift first
+    move_leg(1, forwards, 150, 100)
+    move_leg(3, forwards, 150, 100)
+    move_leg(5, forwards, 850, 900)
+    uSleep(0.5)
+
+    #Turn on second
+    move_leg(2, backwards, 267, 154)
+    move_leg(4, backwards, 733, 846)
+    move_leg(6, backwards, 733, 846)
+    uSleep(1)
+
+    #Stand on first
+    move_leg(1, forwards, 267, 154)
+    move_leg(3, forwards, 267, 154)
+    move_leg(5, forwards, 733, 846)
+    uSleep(1)
+
+    #Lift second set
+    move_leg(2, forwards, 150, 100)
+    move_leg(4, forwards, 850, 900)
+    move_leg(6, forwards, 850, 900)
+    uSleep(0.5)
+
+    #Turn on first
+    move_leg(1, backwards, 267, 154)
+    move_leg(3, backwards, 267, 154)
+    move_leg(5, backwards, 733, 846)
+    uSleep(1)
+
+    if (degree > 45):
+        new_turn(RorL, degree - 45)
+
+    else:
+        if(RorL):
+            move_leg(2, 500, 267, 154)
+            move_leg(4, 500, 733, 846)
+            move_leg(6, 500, 733, 846)
+            uSleep(1)
+
+            move_leg(1, 500, 150, 100)
+            move_leg(3, 500, 150, 100)
+            move_leg(5, 500, 850, 900)
+            uSleep(0.5)
+
+            move_leg(1, 500, 267, 154)
+            move_leg(3, 500, 267, 154)
+            move_leg(5, 500, 733, 846)
+
+        else:
+            move_leg(1, 500, 267, 154)
+            move_leg(3, 500, 267, 154)
+            move_leg(5, 500, 733, 846)
+            uSleep(1)
+
+            move_leg(2, 500, 150, 100)
+            move_leg(4, 500, 850, 900)
+            move_leg(6, 500, 850, 900)
+            uSleep(0.5)
+
+            move_leg(2, 500, 267, 154)
+            move_leg(4, 500, 733, 846)
+            move_leg(6, 500, 733, 846)
+        uSleep(1)
+
 def scan():
     dist = sonar.getDistance()
     print(f"Distance: {dist}")
@@ -212,12 +292,12 @@ def turn_cardinal(curdir, newdir):
         newdir = 4
     diffdir = newdir - curdir
     if(abs(diffdir) == 2):
-        turn(False, 90)
-        turn(False, 90)
+        new_turn(False, 90)
+        new_turn(False, 90)
     elif(diffdir == 1 or diffdir == -3):
-        turn(False, 90)
+        new_turn(False, 90)
     elif(diffdir == 3 or diffdir == -1):
-        turn(True, 90)
+        new_turn(True, 90)
 
 def walk_block():
     for i in range(4):
@@ -245,19 +325,17 @@ def _mapmap(map, tileQueue):
         for _ in range(level_size):
             tile = tileQueue.popleft()
 
-            if tile[0] < 0 or tile[1] < 0 or tile[0] >= map_size[0] or tile[1] >= map_size[1]:
-                continue  # Ignore out-of-bounds tiles
+            if inBounds(tile):
+                current_cost = map.getCost(tile[0], tile[1])
+                if current_cost != 0 and current_cost <= cost:
+                    continue
 
-            # If this tile has already been assigned a lower cost, skip it
-            current_cost = map.getCost(tile[0], tile[1])
-            if current_cost != 0 and current_cost <= cost:
-                continue
+                map.setCost(tile[0], tile[1], cost)
 
-            map.setCost(tile[0], tile[1], cost)
-
-            for i in range(4):
-                if map.getNeighborObstacle(tile[0], tile[1], i + 1) == 0 and (map.getCost(*getTile(tile, i + 1)) == 0):
-                        tileQueue.append(getTile(tile, i + 1))
+                for i in range(4):
+                    nextTile = getTile(tile, i + 1)
+                    if map.getNeighborObstacle(tile[0], tile[1], i + 1) == 0 and inBounds(nextTile) and (map.getCost(*nextTile) == 0):
+                            tileQueue.append(getTile(tile, i + 1))
         
         cost += 1
 
@@ -274,7 +352,7 @@ def explore_map(map, curpos):
         nextTile = getTile(curpos, curpos[2] - i + 1)
         if dist < 500 :
             map.setObstacle(curpos[0], curpos[1], 1, curpos[2] - i + 1)
-        elif 0 <= nextTile[0] and nextTile[0] < mapSize[0] and 0 <= nextTile[1] and nextTile[1] < mapSize[1]:
+        elif inBounds(map, nextTile):
             tileQueue.append(nextTile)
     
     turn_cardinal(curpos[2], 2)
@@ -306,7 +384,7 @@ def explore_map(map, curpos):
                 nextTile = getTile(curpos, curpos[2] - i + 1)
                 if dist < 500 :
                     map.setObstacle(curpos[0], curpos[1], 1, curpos[2] - i + 1)
-                elif 0 <= nextTile[0] and nextTile[0] < mapSize[0] and 0 <= nextTile[1] and nextTile[1] < mapSize[1]:
+                elif inBounds(map, nextTile):
                     tileQueue.append(nextTile)
             
             completed.append(curpos)
@@ -316,12 +394,11 @@ def find_path(map, start, goal):
     path = []
     currCost = map.getCost(start[0],start[1])
     currTile = start
-    map_size = [map.getCostmapSize(True), map.getCostmapSize(False)]
 
     while currCost != 0:
         for i in range(4):
             nextTile = getTile(currTile, i + 1)
-            if not(nextTile[0] < 0 or nextTile[1] < 0 or nextTile[0] >= map_size[0] or nextTile[1] >= map_size[1]):
+            if inBounds(map, nextTile):
                 nextCost = map.getCost(nextTile[0], nextTile[1])
                 if map.getNeighborObstacle(currTile[0], currTile[1], i + 1) == 0 and currCost > nextCost:
                     path.append(i + 1)
@@ -339,6 +416,10 @@ def getTile(currTile, dir):
         return [currTile[0] + 1, currTile[1]]
     elif dir == 4 or dir == 0:
         return [currTile[0], currTile[1] - 1]
+
+def inBounds(map, pos):
+    map_size = [map.getCostmapSize(True), map.getCostmapSize(False)]
+    return (pos[0] >= 0 and pos[1] >= 0 and pos[0] < map_size[0] and pos[1] < map_size[1])
     
 def inputPos():
     pos = input("Please input your start position in the form of 'X,Y,Direction': ").split(",")
