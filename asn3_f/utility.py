@@ -171,9 +171,9 @@ def turn(RorL, degree):
         uSleep(1)
 
 def new_turn(RorL, degree):
-    differance = int(110 / (45/min(45, degree))) - 2
+    differance = int(110 / (45/min(45, degree))) + round((7.13 + 0.355 * min(45,degree) - 0.00127 * min(45,degree)**2))
     if RorL:
-        differance -= 14
+        differance -= round(4.09 + 0.253 * min(45,degree) + 0.00919 * min(45,degree)**2)
     forwards = 500 - differance
     backwards = 500 + differance
     if(RorL):#Turning left
@@ -222,40 +222,44 @@ def new_turn(RorL, degree):
     move_leg(5, backwards, 733, 846)
     uSleep(1)
 
-    if (degree > 45):
-        new_turn(RorL, degree - 45)
+    #if (degree > 45):
+    #    new_turn(RorL, degree - 45)
+
+    
+    if(RorL):
+        move_leg(2, 500, 267, 154)
+        move_leg(4, 500, 733, 846)
+        move_leg(6, 500, 733, 846)
+        uSleep(1)
+
+        move_leg(1, 500, 150, 100)
+        move_leg(3, 500, 150, 100)
+        move_leg(5, 500, 850, 900)
+        uSleep(0.5)
+
+        move_leg(1, 500, 267, 154)
+        move_leg(3, 500, 267, 154)
+        move_leg(5, 500, 733, 846)
 
     else:
-        if(RorL):
-            move_leg(2, 500, 267, 154)
-            move_leg(4, 500, 733, 846)
-            move_leg(6, 500, 733, 846)
-            uSleep(1)
-
-            move_leg(1, 500, 150, 100)
-            move_leg(3, 500, 150, 100)
-            move_leg(5, 500, 850, 900)
-            uSleep(0.5)
-
-            move_leg(1, 500, 267, 154)
-            move_leg(3, 500, 267, 154)
-            move_leg(5, 500, 733, 846)
-
-        else:
-            move_leg(1, 500, 267, 154)
-            move_leg(3, 500, 267, 154)
-            move_leg(5, 500, 733, 846)
-            uSleep(1)
-
-            move_leg(2, 500, 150, 100)
-            move_leg(4, 500, 850, 900)
-            move_leg(6, 500, 850, 900)
-            uSleep(0.5)
-
-            move_leg(2, 500, 267, 154)
-            move_leg(4, 500, 733, 846)
-            move_leg(6, 500, 733, 846)
+        move_leg(1, 500, 267, 154)
+        move_leg(3, 500, 267, 154)
+        move_leg(5, 500, 733, 846)
         uSleep(1)
+
+        move_leg(2, 500, 150, 100)
+        move_leg(4, 500, 850, 900)
+        move_leg(6, 500, 850, 900)
+        uSleep(0.5)
+
+        move_leg(2, 500, 267, 154)
+        move_leg(4, 500, 733, 846)
+        move_leg(6, 500, 733, 846)
+
+    uSleep(1)
+
+    if (degree > 45):
+        new_turn(RorL, degree - 45)
 
 def scan():
     dist = sonar.getDistance()
@@ -266,7 +270,7 @@ def turn_sensor(turn):
     #utility.turn_sensor(125) = right
     #utility.turn_sensor(875) = left
     board.bus_servo_set_position(0.01, [[21, turn]])
-    uSleep(6)
+    uSleep(4)
     return scan()
 
 # North = 1, East = 2, South = 3, West = 4
@@ -429,6 +433,9 @@ def inputPos():
         return inputPos()
     
     return [int(pos[0]), int(pos[1]), int(pos[2])]
+
+def inputAng():
+    return int(input("Please input the actual angle in terms of servo offset(21 = 5deg): "))
 
 def start_timer():
     return time.time()

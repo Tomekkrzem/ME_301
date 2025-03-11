@@ -1,7 +1,9 @@
 import math
 import csv
 import numpy as np
-from utility import turn
+from utility import new_turn
+import time
+from csv_generator import update_csv
 
 def knn(x_train, x_Test, k):
     
@@ -70,13 +72,14 @@ k = 3
 #         # error += abs(round((test[i][-1]-round(knn(train,test[i][:-1],j+1),2)),2))
 #     print(f"k: {j+1} | Error: {error / 18}")
 
-
 def correction(deg):
-    if deg < 0:
-        turn(1,abs(deg))
+    print(deg)
+    if deg == 0:
+        return 
+    elif deg < 0:
+        new_turn(0,abs(deg))
     else:
-        turn(0,deg)
+        new_turn(1,deg)
 
-print(round(knn(train,test[0][:-1],k),2))
 
 
